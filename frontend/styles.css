@@ -1,0 +1,96 @@
+:root{
+  --bg:#0f1115;
+  --panel:#171a21;
+  --fg:#e8ecf1;
+  --muted:#98a3b1;
+  --accent:#6aa1ff;
+  --accent2:#ffd166;
+  /* 国风配色 */
+  --ink-blue:#2c3659;  /* 墨蓝 */
+  --indigo:#1a2236;
+  --ocher:#b48a5c;     /* 赭石 */
+  --bamboo:#7bab87;    /* 竹青 */
+  --gold:#e6d2a0;      /* 浅金 */
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:"Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans CJK SC", "Noto Serif SC", "Segoe UI Emoji";
+  /* 古典底色 + 渐变 */
+  background:
+      radial-gradient(1000px 500px at 10% -10%, rgba(123,171,135,.12), transparent),
+      radial-gradient(800px 400px at 110% 10%, rgba(180,138,92,.12), transparent),
+      linear-gradient(135deg, var(--ink-blue) 0%, var(--indigo) 100%);
+  color:var(--fg);
+}
+body.lock{overflow:hidden}
+.container{max-width:920px; margin:0 auto; padding:32px 20px}
+header h1{margin:0 0 8px 0; font-family:"Noto Serif SC", serif; font-size:32px; font-weight:600}
+.sub{margin:0; color:var(--muted)}
+
+main{margin-top:24px}
+.ask{background:var(--panel); border:1px solid #222733; border-radius:12px; padding:16px}
+.input-row{display:flex; gap:12px}
+.input-row input{flex:1; padding:12px 14px; border-radius:10px; border:1px solid #2b3240; background:#0e1016; color:var(--fg); outline:none}
+.input-row button{padding:0 16px; border:none; border-radius:10px; background:linear-gradient(135deg, var(--accent), #8ab6ff); color:#0b0f16; font-weight:600; cursor:pointer}
+.hints{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
+.hint{font-size:12px; color:#0b0f16; background:#d7e3ff; border-radius:999px; padding:6px 10px; cursor:pointer}
+.hint:nth-child(2){background:#fff0c7}
+
+.result{margin-top:24px; background:var(--panel); border:1px solid #222733; border-radius:12px; padding:16px}
+.result pre{white-space:pre-wrap; word-break:break-word; margin:0}
+
+.debug{margin-top:16px; background:var(--panel); border:1px dashed #30384a; border-radius:12px; padding:12px}
+.debug summary{cursor:pointer}
+.debug pre{white-space:pre-wrap; word-break:break-word; background:#0e1016; border-radius:8px; padding:10px;}
+
+footer{margin-top:28px; color:var(--muted); display:flex; justify-content:center}
+footer > div{display:flex; gap:16px}
+
+/* 全屏启动幻灯片 */
+.splash{position:fixed; inset:0; background:#000; z-index:9999; display:flex; align-items:center; justify-content:center;}
+.splash.hidden{display:none}
+.splash{background:
+  radial-gradient(800px 400px at 20% -10%, rgba(110,150,255,.18), transparent),
+  radial-gradient(800px 400px at 120% 10%, rgba(255,170,90,.15), transparent),
+  #000;}
+.splash-frame{position:relative; width:min(1080px, 90vw); height:min(72vh, 760px); border-radius:16px; overflow:hidden;}
+/* 去掉外边框/灯带，避免任何边框感 */
+/* .splash-frame::before 已移除 */
+.splash-frame::after{content:""; position:absolute; inset:0; border-radius:0; background:transparent; z-index:0}
+.slideshow{position:absolute; inset:0; overflow:hidden; border-radius:16px; z-index:1}
+.slideshow .slide{position:absolute; inset:0; background-size:cover; background-position:center; opacity:0; transform:scale(1.08); transition:opacity 800ms ease, transform 6s ease}
+.slideshow .slide.on{opacity:1; transform:scale(1.18)}
+.splash-hint{position:absolute; bottom:24px; left:50%; transform:translateX(-50%); color:#fff; font-size:13px; letter-spacing:.2em; opacity:.8}
+/* 进入主页按钮已移除，改为任意键/点击进入 */
+
+/* 人物虚化的边：用同图的模糊外沿环形遮罩只保留边缘模糊 */
+/* 移除柔彩外光，恢复圆角图片 */
+.slideshow .slide::before,
+.slideshow .slide::after{ content:none !important; }
+
+/* 背景粒子画布置底 */
+#bg-canvas{position:fixed; inset:0; z-index:0; pointer-events:none;}
+.container, header, main, footer{position:relative; z-index:1}
+
+/* 国风：星宿连线 + 水墨晕染层（可替换为实际资源）*/
+body::before{content:""; position:fixed; inset:0; background:url('/ui/xingxiu.svg') center/cover no-repeat; opacity:.25; pointer-events:none; z-index:0}
+body::after{content:""; position:fixed; inset:0; background:url('/ui/ink.svg') center/cover no-repeat; opacity:.05; pointer-events:none; z-index:0}
+
+/* 流星：方向与轨迹一致（左上 → 右下） */
+@keyframes meteor {
+  0%   { transform: translate(-20vw, -20vh) rotate(45deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translate(110vw, 110vh) rotate(45deg); opacity: 0; }
+}
+.meteor {
+  position: fixed;
+  left: 0; top: 0;
+  width: 160px; height: 2px;
+  background: linear-gradient(90deg, rgba(255,246,234,0), rgba(255,246,234,.85), rgba(255,246,234,0));
+  animation: meteor 15s linear infinite;
+  z-index: 0; /* 放在内容之下，避免干扰 */
+  filter: drop-shadow(0 0 6px rgba(255,246,234,.4));
+  pointer-events: none;
+}

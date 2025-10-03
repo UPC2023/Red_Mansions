@@ -1,8 +1,9 @@
+#create_graph.py
 from py2neo import Graph, Node, Relationship
 from config import graph
 
 # 显式指定 encoding='utf-8'
-with open("../raw_data/relation.txt", encoding='utf-8') as f:
+with open("relation.txt", encoding='utf-8') as f:
     for line in f.readlines():
         rela_array=line.strip("\n").split(",")
         print(rela_array)

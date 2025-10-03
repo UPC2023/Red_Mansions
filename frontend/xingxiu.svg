@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.2" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .star{fill:#e6d2a0; opacity:.35}
+      .line{stroke:#e6d2a0; stroke-width:1.1; stroke-linecap:round; stroke-linejoin:round; opacity:.3}
+    </style>
+  </defs>
+  <!-- 青龙（左）若干连线抽象 -->
+  <g filter="url(#glow)">
+    <polyline class="line" points="120,420 180,380 240,420 300,360 360,390 420,340 480,360"/>
+    <polyline class="line" points="180,500 230,460 290,490 340,450 400,470"/>
+    <circle class="star" cx="120" cy="420" r="2"/>
+    <circle class="star" cx="180" cy="380" r="2.5"/>
+    <circle class="star" cx="240" cy="420" r="2"/>
+    <circle class="star" cx="300" cy="360" r="2.2"/>
+    <circle class="star" cx="360" cy="390" r="2"/>
+    <circle class="star" cx="420" cy="340" r="2.6"/>
+    <circle class="star" cx="480" cy="360" r="2"/>
+  </g>
+  <!-- 白虎（右）抽象 -->
+  <g filter="url(#glow)">
+    <polyline class="line" points="1120,420 1180,380 1240,420 1300,360 1360,390 1420,340 1480,360"/>
+    <polyline class="line" points="1160,500 1210,460 1270,490 1320,450 1380,470"/>
+    <circle class="star" cx="1120" cy="420" r="2"/>
+    <circle class="star" cx="1180" cy="380" r="2.5"/>
+    <circle class="star" cx="1240" cy="420" r="2"/>
+    <circle class="star" cx="1300" cy="360" r="2.2"/>
+    <circle class="star" cx="1360" cy="390" r="2"/>
+    <circle class="star" cx="1420" cy="340" r="2.6"/>
+    <circle class="star" cx="1480" cy="360" r="2"/>
+  </g>
+  <!-- 朱雀（上）抽象 -->
+  <g filter="url(#glow)">
+    <polyline class="line" points="460,180 520,150 580,180 640,140 700,160 760,130 820,150 880,120 940,140"/>
+    <circle class="star" cx="460" cy="180" r="2"/>
+    <circle class="star" cx="520" cy="150" r="2.5"/>
+    <circle class="star" cx="580" cy="180" r="2"/>
+    <circle class="star" cx="640" cy="140" r="2.2"/>
+    <circle class="star" cx="700" cy="160" r="2"/>
+    <circle class="star" cx="760" cy="130" r="2.4"/>
+    <circle class="star" cx="820" cy="150" r="2"/>
+    <circle class="star" cx="880" cy="120" r="2.2"/>
+    <circle class="star" cx="940" cy="140" r="2"/>
+  </g>
+  <!-- 玄武（下）抽象 -->
+  <g filter="url(#glow)">
+    <polyline class="line" points="520,720 560,680 620,710 680,670 740,690 800,650 860,670 920,640 980,660"/>
+    <circle class="star" cx="520" cy="720" r="2"/>
+    <circle class="star" cx="560" cy="680" r="2.5"/>
+    <circle class="star" cx="620" cy="710" r="2"/>
+    <circle class="star" cx="680" cy="670" r="2.2"/>
+    <circle class="star" cx="740" cy="690" r="2"/>
+    <circle class="star" cx="800" cy="650" r="2.4"/>
+    <circle class="star" cx="860" cy="670" r="2"/>
+    <circle class="star" cx="920" cy="640" r="2.2"/>
+    <circle class="star" cx="980" cy="660" r="2"/>
+  </g>
+</svg>

@@ -57,6 +57,6 @@ def crawl_reddream_chapters(start=1, end=5):
 
     print("所有章节爬取完成！")
 
-# 如果直接运行此文件，则执行爬虫
+# 执行爬虫
 if __name__ == '__main__':
     crawl_reddream_chapters(6, 120)

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>红楼梦知识图谱问答</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/ui/styles.css" />
+</head>
+<body>
+  <!-- 进入前的全屏幻灯片（淡入淡出），点击或按任意键进入主页 -->
+  <div id="splash" class="splash hidden">
+    <div class="splash-frame">
+      <div class="slideshow">
+        <div class="slide" style="background-image:url('/photos/贾宝玉.jpg')"></div>
+        <div class="slide" style="background-image:url('/photos/林黛玉.jpg')"></div>
+        <div class="slide" style="background-image:url('/photos/薛宝钗.jpg')"></div>
+        <div class="slide" style="background-image:url('/photos/王熙凤.jpg')"></div>
+      </div>
+    </div>
+    <div class="splash-hint">按任意键或点击进入主页</div>
+  </div>
+
+  <!-- 背景粒子层（超轻量 Canvas） -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="container">
+    <header>
+      <h1>红楼梦知识图谱 · 问答系统</h1>
+      <p class="sub">输入中文问题，获取基于 Neo4j 的结构化答案</p>
+    </header>
+
+    <main>
+      <section class="ask">
+        <div class="input-row">
+          <input id="q" type="text" placeholder="例如：王熙凤的判词是什么？" />
+          <button id="btn">提问</button>
+        </div>
+        <div class="hints">
+          <span class="hint" data-q="王熙凤的判词是什么？">判词</span>
+          <span class="hint" data-q="林黛玉参与了什么？">剧情</span>
+          <span class="hint" data-q="贾政和贾宝玉是什么关系？">人物关系</span>
+          <span class="hint" data-q="第23回讲了什么？">章节</span>
+        </div>
+      </section>
+
+      <section class="result">
+        <h2>答案</h2>
+        <pre id="answer">（这里显示回答）</pre>
+      </section>
+
+      <section class="debug">
+        <details>
+          <summary>调试信息（展开查看）</summary>
+          <div>
+            <div><b>intent</b>：<code id="intent"></code></div>
+            <div><b>payload</b>：<code id="payload"></code></div>
+            <div><b>cypher</b>：</div>
+            <pre id="cypher"></pre>
+            <div><b>params</b>：</div>
+            <pre id="params"></pre>
+            <div><b>rows</b>：</div>
+            <pre id="rows"></pre>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <footer>
+      <div>
+        <span>后端：FastAPI · Neo4j（py2neo）</span>
+        <span>前端：轻量静态页</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/ui/app.js"></script>
+  <script>
+  // 1) 启动幻灯片：首屏覆盖，自动轮播，任意交互退出
+  (function(){
+    const splash = document.getElementById('splash');
+    const slides = Array.from(document.querySelectorAll('#splash .slide'));
+    let idx = 0; let timer;
+    function show(i){ slides.forEach((el,j)=>{ el.classList.toggle('on', i===j); }); }
+    function start(){ splash.classList.remove('hidden'); show(0); timer = setInterval(()=>{ idx=(idx+1)%slides.length; show(idx); }, 2200); }
+    function exit(){ clearInterval(timer); splash.classList.add('hidden'); document.body.classList.remove('lock'); document.removeEventListener('keydown', onKey); }
+    function onKey(e){ if(e.key==='Enter'||e.key===' '){ onceExit(e); } }
+    function armExit(){
+      // 在遮罩层自身监听，避免事件穿透到下层输入框
+      const splashEl = document.getElementById('splash');
+      ['click','touchstart'].forEach(ev=> splashEl.addEventListener(ev, onceExit, {once:true, capture:true}));
+      document.addEventListener('keydown', onKey);
+    }
+    function onceExit(e){ if(e){ e.preventDefault(); e.stopPropagation(); } exit(); }
+    document.body.classList.add('lock'); start(); armExit();
+  })();
+
+  // 2) 背景粒子：极简 60~100 个粒子，缓慢漂移
+  (function(){
+    const cvs = document.getElementById('bg-canvas');
+    const ctx = cvs.getContext('2d');
+    function resize(){ cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+    const N = Math.min(100, Math.floor(window.innerWidth/20));
+    const ps = Array.from({length:N}, ()=>({
+      x: Math.random()*cvs.width,
+      y: Math.random()*cvs.height,
+      vx: (Math.random()-0.5)*0.15,
+      vy: (Math.random()-0.5)*0.15,
+      r: 1 + Math.random()*1.5,
+      a: 0.25 + Math.random()*0.35
+    }));
+    function step(){
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+      // 连接近邻的淡线
+      for(let i=0;i<ps.length;i++){
+        const p = ps[i];
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0||p.x>cvs.width) p.vx*=-1;
+        if(p.y<0||p.y>cvs.height) p.vy*=-1;
+        ctx.beginPath(); ctx.fillStyle = `rgba(255,255,255,${p.a*0.6})`;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+        for(let j=i+1;j<ps.length;j++){
+          const q = ps[j];
+          const dx=p.x-q.x, dy=p.y-q.y, d=Math.hypot(dx,dy);
+          if(d<110){
+            ctx.strokeStyle = `rgba(150,180,255,${(1-d/110)*0.15})`;
+            ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(step);
+    }
+    step();
+  })();
+
+  // 3) 极简流星：左上 → 右下，方向与轨迹一致
+  (function(){
+    function spawn(){
+      const m = document.createElement('div');
+      m.className = 'meteor';
+      document.body.appendChild(m);
+      setTimeout(()=>{ m.remove(); }, 16000);
+    }
+    setTimeout(spawn, 2000);
+    setInterval(spawn, 30000);
+  })();
+
+  // 4) 采样每张图片的主色，驱动柔彩外光（无需第三方库）
+  (function(){
+    const slides = Array.from(document.querySelectorAll('#splash .slide'));
+    if(!slides.length) return;
+    const cvs = document.createElement('canvas');
+    const ctx = cvs.getContext('2d');
+    cvs.width = 32; cvs.height = 32;
+    function setGlowColor(slide, r, g, b){
+      slide.style.setProperty('--glow-r', String(Math.round(r)));
+      slide.style.setProperty('--glow-g', String(Math.round(g)));
+      slide.style.setProperty('--glow-b', String(Math.round(b)));
+    }
+    function sample(bgUrl){
+      return new Promise((resolve)=>{
+        const url = (bgUrl.match(/url\(['"]?(.*?)['"]?\)/)||[])[1];
+        if(!url){ resolve([230,210,160]); return; }
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = ()=>{
+          try{
+            ctx.clearRect(0,0,cvs.width,cvs.height);
+            // draw cover-fit crop heuristic
+            const ratio = img.width/img.height;
+            const cw = cvs.width, ch = cvs.height;
+            let dw, dh, dx, dy;
+            if(ratio > cw/ch){ // img wider
+              dh = ch; dw = dh*ratio; dx = (cw-dw)/2; dy = 0;
+            }else{ // img taller
+              dw = cw; dh = dw/ratio; dx = 0; dy = (ch-dh)/2;
+            }
+            ctx.drawImage(img, dx, dy, dw, dh);
+            const data = ctx.getImageData(0,0,cw,ch).data;
+            // simple average with slight weighting to mid-tones
+            let r=0,g=0,b=0,cnt=0;
+            for(let i=0;i<data.length;i+=4){
+              const rr=data[i], gg=data[i+1], bb=data[i+2], aa=data[i+3];
+              if(aa<200) continue; // skip transparent
+              const maxc=Math.max(rr,gg,bb), minc=Math.min(rr,gg,bb);
+              const sat = maxc-minc; // as weight
+              const w = 0.7 + sat/255*0.6; // 0.7~1.3 favor saturated colors
+              r += rr*w; g += gg*w; b += bb*w; cnt += w;
+            }
+            if(cnt>0){ r/=cnt; g/=cnt; b/=cnt; }
+            // soften toward warm bamboo-gold harmony
+            r = (r*0.7 + 230*0.3);
+            g = (g*0.8 + 210*0.2);
+            b = (b*0.7 + 160*0.3);
+            resolve([r,g,b]);
+          }catch(e){ resolve([230,210,160]); }
+        };
+        img.onerror = ()=> resolve([230,210,160]);
+        img.src = url;
+      });
+    }
+    slides.forEach(async (slide)=>{
+      const bg = getComputedStyle(slide).backgroundImage;
+      const [r,g,b] = await sample(bg);
+      setGlowColor(slide, r,g,b);
+    });
+  })();
+  </script>
+</body>
+</html>

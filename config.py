@@ -1,8 +1,18 @@
+#config.py
 from py2neo import Graph
-graph = Graph(
-    "bolt://localhost:7687",  # 推荐使用 bolt 协议
-    auth=("neo4j", "yw050130") # 使用 auth 元组
-)
+
+NEO4J_URL = "bolt://localhost:7687"  # 推荐使用 bolt 协议
+NEO4J_AUTH = ("neo4j", "yw050130")  # 使用 auth 元组
+
+_graph = None
+
+
+def get_graph() -> Graph:
+    """惰性创建 Graph 连接，避免应用启动时因数据库未启动而崩溃。"""
+    global _graph
+    if _graph is None:
+        _graph = Graph(NEO4J_URL, auth=NEO4J_AUTH)
+    return _graph
 CA_LIST = {"贾家荣国府":0,"贾家宁国府":1,"王家":2,"史家":3,"薛家":4,"其他":5,"林家":6}
 similar_words = {
     "爸爸": "父亲",
